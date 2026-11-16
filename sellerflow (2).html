@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SELLERFLOW — 중고 전자제품 판매 작업대</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#182033;--muted:#667085;--line:#e5e9f2;--blue:#315efb;--green:#14804a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:#111a32;color:white;padding:22px max(18px,calc((100% - 1100px)/2));}
+header small{color:#b9c6e6}header h1{margin:4px 0;font-size:25px}main{max-width:1100px;margin:22px auto;padding:0 16px}
+.hero{background:linear-gradient(120deg,#1c2b55,#315efb);color:white;border-radius:18px;padding:22px;margin-bottom:18px}
+.hero h2{margin:0 0 6px;font-size:22px}.hero p{margin:0;color:#e1e8ff}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 3px 14px #1725540a}
+.card h3{margin:0 0 13px;font-size:17px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:13px;color:var(--muted);margin:9px 0 5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d8deea;border-radius:9px;font:inherit;background:white;color:var(--ink)}
+textarea{min-height:92px;resize:vertical}button{border:0;background:var(--blue);color:white;padding:10px 14px;border-radius:9px;font-weight:650;cursor:pointer;margin-top:10px}
+button.secondary{background:#edf1ff;color:#2449d8}button.danger{background:#fff0f0;color:#b42318}
+.result{background:#f6f8ff;border:1px solid #e3e9ff;border-radius:10px;padding:12px;margin-top:12px;white-space:pre-wrap;min-height:42px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:white;border:1px solid var(--line);border-radius:13px;padding:14px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:22px;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:12px}.full{grid-column:1/-1}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><small>중고 전자제품 판매자용 운영 도구</small><h1>SELLERFLOW</h1><div>상품 등록부터 마진 계산, 문의 답변, 판매 기록까지 한곳에서.</div></header>
+<main>
+<section class="hero"><h2>판매 준비 시간을 줄이고, 남는 돈을 정확히 확인하세요.</h2><p>중고 그래픽카드·CPU·노트북·주변기기 판매자를 위한 간단한 작업대입니다.</p></section>
+<div class="stats">
+ <div class="stat"><small>등록 상품</small><strong id="count">0개</strong></div>
+ <div class="stat"><small>판매 완료</small><strong id="sold">0개</strong></div>
+ <div class="stat"><small>기록된 예상 순이익</small><strong id="profit">₩0</strong></div>
+</div>
+<div class="grid">
+<section class="card"><h3>1. 판매 가격·마진 계산</h3>
+ <div class="row"><div><label>매입가 (원)</label><input id="cost" type="number" value="100000"></div><div><label>판매 희망가 (원)</label><input id="price" type="number" value="130000"></div></div>
+ <div class="row"><div><label>플랫폼 수수료 (%)</label><input id="fee" type="number" value="0" step=".1"></div><div><label>기타 비용 (원)</label><input id="extra" type="number" value="3000"></div></div>
+ <button onclick="calc()">마진 계산하기</button><div class="result" id="calcResult">예상 순이익이 여기에 표시됩니다.</div>
+</section>
+<section class="card"><h3>2. 판매글 초안 만들기</h3>
+ <label>상품명</label><input id="item" placeholder="예: RTX 3060 Ti 그래픽카드">
+ <div class="row"><div><label>상태</label><select id="condition"><option>정상 작동</option><option>미개봉</option><option>사용감 있음</option><option>수리·하자 있음</option></select></div><div><label>희망 가격 (원)</label><input id="ask" type="number" placeholder="예: 250000"></div></div>
+ <label>확인한 사항 / 구성품 / 거래 조건</label><textarea id="details" placeholder="예: 게임 테스트 완료, 박스 포함, 직거래 가능"></textarea>
+ <button onclick="listing()">판매글 초안 생성</button><button class="secondary" onclick="copyText('listingResult')">복사</button>
+ <div class="result" id="listingResult"></div>
+</section>
+<section class="card"><h3>3. 구매자 문의 답변 초안</h3>
+ <label>받은 질문</label><textarea id="question" placeholder="예: 가격 조금 깎아주실 수 있나요?"></textarea>
+ <label>내가 답할 조건 / 사실</label><input id="facts" placeholder="예: 2만원까지 조정 가능, 직거래만 가능">
+ <button onclick="reply()">답변 초안 생성</button><button class="secondary" onclick="copyText('replyResult')">복사</button>
+ <div class="result" id="replyResult"></div>
+</section>
+<section class="card"><h3>4. 상품 기록</h3>
+ <label>기록할 상품명</label><input id="recordName" placeholder="예: RTX 3060 Ti">
+ <div class="row"><div><label>매입가</label><input id="recordCost" type="number" placeholder="100000"></div><div><label>판매가</label><input id="recordPrice" type="number" placeholder="130000"></div></div>
+ <button onclick="addRecord()">상품 저장</button>
+ <div class="note">저장 데이터는 현재 브라우저에만 저장됩니다.</div>
+</section>
+<section class="card full"><h3>5. 판매 관리</h3>
+ <div style="overflow-x:auto"><table><thead><tr><th>상품</th><th>매입가</th><th>판매가</th><th>예상 차익</th><th>상태</th><th>관리</th></tr></thead><tbody id="records"></tbody></table></div>
+ <button class="secondary" onclick="exportCSV()">CSV 내보내기</button><button class="danger" onclick="clearAll()">전체 기록 삭제</button>
+ <p class="note">주의: 이 도구는 판매 보조용 초안과 계산을 제공합니다. 시세 조회, 플랫폼 자동 등록, 결제 처리, 고객 자동 발송 기능은 아직 연결되어 있지 않습니다. 생성된 상품 정보와 답변은 사실 여부를 확인한 뒤 사용하세요.</p>
+</section></div></main>
+<script>
+const $=id=>document.getElementById(id), won=n=>'₩'+Math.round(n||0).toLocaleString('ko-KR');
+let data=JSON.parse(localStorage.getItem('sellerflow_records')||'[]');
+function calc(){let c=+$('cost').value,p=+$('price').value,f=+$('fee').value,e=+$('extra').value;let net=p-p*f/100-e-c;$('calcResult').textContent=`예상 순이익: ${won(net)}\\n판매가 대비 이익률: ${p?((net/p)*100).toFixed(1):0}%\\n※ 세금·반품·추가 비용은 별도 확인하세요.`}
+function listing(){let n=$('item').value.trim();if(!n){alert('상품명을 입력하세요.');return}let t=`[${n}]\\n상태: ${$('condition').value}\\n가격: ${won(+$('ask').value)}\\n\\n상세 정보\\n${$('details').value||'상품 상태와 구성품은 사진 및 거래 전 확인 부탁드립니다.'}\\n\\n거래 전 궁금한 점은 편하게 문의해 주세요.\\n※ 실제 상태와 다른 내용은 반드시 수정해 주세요.`;$('listingResult').textContent=t}
+function reply(){let q=$('question').value.trim(),f=$('facts').value.trim();if(!q){alert('구매자 질문을 입력하세요.');return}$('replyResult').textContent=`문의 감사합니다! 질문하신 내용은 확인했습니다. ${f?f+' 조건으로 안내드릴 수 있습니다.':'확인 후 정확하게 답변드리겠습니다.'} 추가로 궁금한 점이 있으면 말씀해 주세요.`}
+function copyText(id){let t=$(id).textContent;if(!t){alert('먼저 초안을 생성하세요.');return}navigator.clipboard?.writeText(t).then(()=>alert('복사했습니다.')).catch(()=>alert('텍스트를 선택해 복사해 주세요.'))}
+function save(){localStorage.setItem('sellerflow_records',JSON.stringify(data));render()}
+function addRecord(){let n=$('recordName').value.trim(),c=+$('recordCost').value,p=+$('recordPrice').value;if(!n||!c||!p){alert('상품명, 매입가, 판매가를 입력하세요.');return}data.push({id:Date.now(),name:n,cost:c,price:p,sold:false});save();$('recordName').value=''}
+function toggle(id){let x=data.find(x=>x.id===id);if(x)x.sold=!x.sold;save()}
+function del(id){data=data.filter(x=>x.id!==id);save()}
+function render(){$('records').innerHTML=data.map(x=>`<tr><td>${esc(x.name)}</td><td>${won(x.cost)}</td><td>${won(x.price)}</td><td>${won(x.price-x.cost)}</td><td>${x.sold?'판매 완료':'판매 중'}</td><td><button class="secondary" onclick="toggle(${x.id})">${x.sold?'판매 중으로':'판매 완료'}</button> <button class="danger" onclick="del(${x.id})">삭제</button></td></tr>`).join('');$('count').textContent=data.length+'개';$('sold').textContent=data.filter(x=>x.sold).length+'개';$('profit').textContent=won(data.filter(x=>x.sold).reduce((s,x)=>s+x.price-x.cost,0))}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function exportCSV(){let rows=[['상품','매입가','판매가','예상차익','상태'],...data.map(x=>[x.name,x.cost,x.price,x.price-x.cost,x.sold?'판매 완료':'판매 중'])];let csv='\\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sellerflow_sales.csv';a.click();URL.revokeObjectURL(a.href)}
+function clearAll(){if(confirm('모든 판매 기록을 삭제할까요?')){data=[];save()}}
+render();calc();
+</script></body></html>
